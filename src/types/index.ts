@@ -15,7 +15,7 @@ export interface IProduct {
 }
 
 export interface CartItem extends IProduct {
-    quentity: number;
+    quantity: number;
 }
 
 type TPayment = 'card' | 'cash';
@@ -25,4 +25,14 @@ export interface IBuyer {
     email: string; 
     phone: string; 
     address: string; 
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: {
+    payment?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+  };
 }

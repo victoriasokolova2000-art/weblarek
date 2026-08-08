@@ -36,3 +36,25 @@ export interface ValidationResult {
     phone?: string;
   };
 }
+
+export interface IProductsResponse {
+    items: IProduct[];
+    total?: number;
+    page?: number;
+}
+
+export interface IOrderRequest {
+  items: Array<{
+    id: string;
+    quantity: number;
+    price: number;
+  }>;
+  buyer: IBuyer;
+}
+
+export interface IOrderResponse {
+  orderId: string;
+  status: 'confirmed' | 'pending' | 'failed';
+  totalAmount: number;
+  message?: string;
+}

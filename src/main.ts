@@ -2,7 +2,7 @@ import './scss/styles.scss';
 
 import { apiProducts } from './utils/data';
 import { CatalogModel } from './components/Models/CatalogModel';
-import { CartModel } from './components/Models/CartModal';
+import { CartModel } from './components/Models/CartModel';
 import { BuyerModel } from './components/Models/BuyerModel';
 import { ApiService } from './components/ApiService';
 import { apiClient } from './components/client';

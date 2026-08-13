@@ -14,10 +14,6 @@ export interface IProduct {
     description: string;
 }
 
-export interface CartItem extends IProduct {
-    quantity: number;
-}
-
 type TPayment = 'card' | 'cash';
 
 export interface IBuyer { 
@@ -29,23 +25,12 @@ export interface IBuyer {
 
 export type TBuyerErrors = Partial<Record<keyof IBuyer, string>>;
 
-export interface ValidationResult {
-  isValid: boolean;
-  errors: {
-    payment?: string;
-    address?: string;
-    email?: string;
-    phone?: string;
-  };
-}
-
 export interface IProductsResponse {
     items: IProduct[];
     total: number;
 }
 
 export interface IOrderRequest extends IBuyer {
-    payment: TPayment;
     total: number;
     items: string[];
 }

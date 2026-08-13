@@ -21,11 +21,13 @@ export interface CartItem extends IProduct {
 type TPayment = 'card' | 'cash';
 
 export interface IBuyer { 
-    payment: TPayment; 
+    payment: TPayment | ''; 
     email: string; 
     phone: string; 
     address: string; 
 }
+
+export type TBuyerErrors = Partial<Record<keyof IBuyer, string>>;
 
 export interface ValidationResult {
   isValid: boolean;
@@ -39,22 +41,16 @@ export interface ValidationResult {
 
 export interface IProductsResponse {
     items: IProduct[];
-    total?: number;
-    page?: number;
+    total: number;
 }
 
-export interface IOrderRequest {
-  items: Array<{
-    id: string;
-    quantity: number;
-    price: number;
-  }>;
-  buyer: IBuyer;
+export interface IOrderRequest extends IBuyer {
+    payment: TPayment;
+    total: number;
+    items: string[];
 }
 
 export interface IOrderResponse {
-  orderId: string;
-  status: 'confirmed' | 'pending' | 'failed';
-  totalAmount: number;
-  message?: string;
+    id: string;
+    total: number;
 }

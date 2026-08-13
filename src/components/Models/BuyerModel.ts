@@ -1,61 +1,47 @@
-import { IBuyer, ValidationResult  } from "../../types/index.ts";
+import { IBuyer, TBuyerErrors } from '../../types/index';
 
+/* Модель покупателя. Хранит данные, которые покупатель указывает
+при оформлении заказа, и проверяет их заполненность. */
 export class BuyerModel {
-    private data: IBuyer | null = null;
+    private payment: IBuyer['payment'] = '';
+    private email: string = '';
+    private phone: string = '';
+    private address: string = '';
 
-    setData (buyer: IBuyer): void {
-        this.data = buyer;
+    /* Сохраняет переданные поля, не затрагивая те, которых нет в параметре. */
+    setData(data: Partial<IBuyer>): void {
+        if (data.payment !== undefined) this.payment = data.payment;
+        if (data.email !== undefined) this.email = data.email;
+        if (data.phone !== undefined) this.phone = data.phone;
+        if (data.address !== undefined) this.address = data.address;
     }
 
-    updateField<K extends keyof IBuyer>(field: K, value: IBuyer[K]): void {
-        if (!this.data) {
-            const empty: Partial<IBuyer> = {};
-            (empty as any)[field] = value;
-            this.data = empty as IBuyer;
-            return;
-        }
-        this.data[field] = value;
-    }
-
-    getData(): IBuyer | null {
-        return this.data;
+    getData(): IBuyer {
+        return {
+            payment: this.payment,
+            email: this.email,
+            phone: this.phone,
+            address: this.address,
+        };
     }
 
     clearData(): void {
-        this.data = null;
+        this.payment = '';
+        this.email = '';
+        this.phone = '';
+        this.address = '';
     }
 
-    validate(): ValidationResult {
-        const errors: NonNullable<ValidationResult['errors']> = {};
-        if (!this.data) {
-        return {
-            isValid: false,
-            errors: {
-            payment: 'Поле "Способ оплаты" не может быть пустым',
-            address: 'Поле "Адрес" не может быть пустым',
-            email: 'Поле "Email" не может быть пустым',
-            phone: 'Поле "Телефон" не может быть пустым',
-            },
-      };
-    }
+    /* Возвращает объект с текстами ошибок. Поле, прошедшее проверку,
+    в объекте отсутствует. Пустой объект означает, что все данные валидны. */
+    validate(): TBuyerErrors {
+        const errors: TBuyerErrors = {};
 
-    const { payment, address, email, phone } = this.data;
+        if (!this.payment) errors.payment = 'Не выбран вид оплаты';
+        if (!this.address.trim()) errors.address = 'Укажите адрес доставки';
+        if (!this.email.trim()) errors.email = 'Укажите емэйл';
+        if (!this.phone.trim()) errors.phone = 'Укажите телефон';
 
-    if (!payment || payment.trim() === '') {
-      errors.payment = 'Поле "Способ оплаты" не может быть пустым';
-    }
-    if (!address || address.trim() === '') {
-      errors.address = 'Поле "Адрес" не может быть пустым';
-    }
-    if (!email || email.trim() === '') {
-      errors.email = 'Поле "Email" не может быть пустым';
-    }
-    if (!phone || phone.trim() === '') {
-      errors.phone = 'Поле "Телефон" не может быть пустым';
-    }
-
-    const isValid = Object.keys(errors).length === 0;
-
-    return { isValid, errors };
+        return errors;
     }
 }

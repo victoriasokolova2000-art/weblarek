@@ -6,96 +6,92 @@ import { CartModel } from './components/Models/CartModal';
 import { BuyerModel } from './components/Models/BuyerModel';
 import { ApiService } from './components/ApiService';
 import { apiClient } from './components/client';
-import { IProductsResponse } from './types/index';
 
-console.log('=== Проверка CatalogModel (на локальных данных)===');
+/* ============ Проверка CatalogModel (на локальных данных) ============ */
+console.log('=== CatalogModel ===');
 
 const catalog = new CatalogModel();
-//проверка состояния
-console.log('catalog.getProducts():', catalog.getProducts());
-//сохраняем массив товаров из apiProducts
+
+console.log('Каталог до сохранения:', catalog.getProducts());
+
 catalog.saveProducts(apiProducts.items);
-//проверка сохранения массива
-const allProducts = catalog.getProducts();
-console.log('Все товары:', allProducts.length, 'шт.', allProducts);
-//поиск по ID
-const productById = catalog.getProductById("c101ab44-ed99-4a54-990d-47aa2bb4e7d9");
-console.log('[getProductById("2")] Результат:', productById);
-//проверка сохранения и получения выбранного товара
+console.log('Массив товаров из каталога:', catalog.getProducts());
+
+const productById = catalog.getProductById('c101ab44-ed99-4a54-990d-47aa2bb4e7d9');
+console.log('Товар по id "c101ab44-...":', productById);
+console.log('Товар по несуществующему id:', catalog.getProductById('no-such-id'));
+
+console.log('Выбранный товар до сохранения:', catalog.getSelectedProduct());
 if (productById) {
     catalog.saveSelectedProduct(productById);
 }
+console.log('Выбранный товар после сохранения:', catalog.getSelectedProduct());
 
-const selected = catalog.getSelectedProduct();
-console.log('Выбранный товар:', selected?.title);
-
-
-console.log('\n=== Проверка CartModel ===');
+/* ============ Проверка CartModel ============ */
+console.log('=== CartModel ===');
 
 const cart = new CartModel();
-//добавляем товары в корзину
-if (allProducts[0]) {
-  cart.addItem({ ...allProducts[0], quantity: 2 });
-}
-if (allProducts[2]) {
-  cart.addItem({ ...allProducts[1], quantity: 1 });
-}
+const [first, second, third] = catalog.getProducts();
 
+console.log('Корзина до добавления товаров:', cart.getItems());
+console.log('Количество товаров до добавления:', cart.getItemsCount());
+console.log('Стоимость товаров до добавления:', cart.getTotalPrice());
+
+cart.addItem(first);
+cart.addItem(second);
+cart.addItem(third); // товар с price: null — не должен влиять на сумму
 console.log('Товары в корзине:', cart.getItems());
-//общая сумма покупки
-console.log('[getTotalAmount] Общая сумма в корзине:', cart.getTotalAmount());
-//очищаем корзину
-cart.clear();
-console.log('Корзина после clear():', cart.getItems());
+console.log('Количество товаров в корзине:', cart.getItemsCount());
+console.log('Стоимость товаров в корзине:', cart.getTotalPrice());
 
-console.log('\n=== Проверка BuyerModel ===');
+console.log(`Товар "${first.title}" есть в корзине:`, cart.hasItem(first.id));
+console.log('Товар с id "no-such-id" есть в корзине:', cart.hasItem('no-such-id'));
+
+cart.removeItem(second);
+console.log(`Корзина после удаления "${second.title}":`, cart.getItems());
+console.log('Количество товаров после удаления:', cart.getItemsCount());
+console.log('Стоимость товаров после удаления:', cart.getTotalPrice());
+
+cart.clear();
+console.log('Корзина после очистки:', cart.getItems());
+console.log('Количество товаров после очистки:', cart.getItemsCount());
+
+/* ============ Проверка BuyerModel ============ */
+console.log('=== BuyerModel ===');
 
 const buyer = new BuyerModel();
-console.log('Полные данные покупателя:', buyer.getData());
 
-const validationResult = buyer.validate();
-console.log('Результат валидации: ', validationResult);
+console.log('Данные покупателя до заполнения:', buyer.getData());
+console.log('Ошибки валидации до заполнения:', buyer.validate());
+
+// сохраняем только один вид оплаты
+buyer.setData({ payment: 'card' });
+console.log('Данные после сохранения вида оплаты:', buyer.getData());
+console.log('Ошибки валидации после вида оплаты:', buyer.validate());
+
+// сохраняем только адрес — вид оплаты должен сохраниться
+buyer.setData({ address: 'Санкт-Петербург, ул. Восстания, 1' });
+console.log('Данные после сохранения адреса:', buyer.getData());
+
+buyer.setData({ email: 'test@example.ru', phone: '+79001234567' });
+console.log('Данные после заполнения всех полей:', buyer.getData());
+console.log('Ошибки валидации при полных данных:', buyer.validate());
 
 buyer.clearData();
-const validationAfterClear = buyer.validate();
-console.log('Валидация после clearData():', validationAfterClear);
+console.log('Данные после очистки:', buyer.getData());
+console.log('Ошибки валидации после очистки:', buyer.validate());
 
-console.log('\n=== Загрузка католога с сервера (API) ===');
+/* ============ Загрузка каталога с сервера ============ */
+console.log('=== Загрузка каталога с сервера ===');
 
 const apiService = new ApiService(apiClient);
 
-async function loadProductsFromApi() {
-  console.log('Запрос товаров с сервера (/product/)...');
-  let productsResponse: IProductsResponse;
-  try {
-    productsResponse = await apiService.getProducts();
-  } catch (e) {
-    console.error('Не удалось получить товары с сервера:', e);
-    return;
-  }
-  console.log('Ответ сервера (/product/):', productsResponse);
-
-  const items = productsResponse.items;
-
-  if(!Array.isArray(items)) {
-    console.error('Ошибка структуры ответа: поле items не является массивом');
-    return;
-  }
-
-  catalog.saveProducts(items);
-
-  console.log('Сохранено товаров в CatalogModel из API:', catalog.getProducts().length);
-  console.log('Каталог после загрузки с API:', catalog.getProducts());
-
-  const firstProduct = catalog.getProducts()[0];
-  if (firstProduct) {
-    const found = catalog.getProductById(firstProduct.id);
-    console.log('Проверка поиска по ID (реальные данные):', found?.title);
-  } else {
-    console.warn('В каталоге нет товаров после загрузки с сервера');
-  }
-}
-
-loadProductsFromApi().catch(err => {
-  console.error('Критическая ошибка при загрузке каталога:', err);
-});
+apiService
+    .getProducts()
+    .then((response) => {
+        catalog.saveProducts(response.items);
+        console.log('Каталог, загруженный с сервера:', catalog.getProducts());
+    })
+    .catch((error) => {
+        console.error('Не удалось загрузить каталог с сервера:', error);
+    });
